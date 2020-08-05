@@ -1,2 +1,3 @@
 # Yolo-Medical
-Yolo implementation for medical images
+Yolo implementation for medical images with Tensorflow.
+
