@@ -11,9 +11,9 @@ import numpy as np
 
 DATA_DIR = "./nii/training"
 TXT_LABEL_FILENAME = "./nii/label_training.txt"
-DIRECTION = "AXIAL" # AXIAL, CORONAL, SAGITTAL, 3D
-IMAGE_FILENAME = "image.nii.gz"
-LABEL_FILENAME = "label.nii.gz"
+DIRECTION = "3D" # AXIAL, CORONAL, SAGITTAL, 3D
+IMAGE_FILENAME = "image.nii"
+LABEL_FILENAME = "label.nii"
 
 # for plotting only
 CLASS_NAMES = ["background", "liver", "lesion"]
@@ -74,6 +74,35 @@ def bboxes_from_slice(image_slice, label_slice,plot=False):
 
 	return bboxes
 
+def bbox_from_volume(image, label):
+	labelStatFilter = sitk.LabelStatisticsImageFilter()
+	labelStatFilter.Execute(image, label)
+
+	bboxes = []
+	for label_num in labelStatFilter.GetLabels():
+		if label_num == 0:
+			continue
+
+		# connected components
+		binaryThresholdFilter = sitk.BinaryThresholdImageFilter()
+		binaryThresholdFilter.SetLowerThreshold(label_num)
+		binaryThresholdFilter.SetUpperThreshold(label_num)
+		binaryThresholdFilter.SetInsideValue(1)
+		binaryThresholdFilter.SetOutsideValue(0)
+		label_ = binaryThresholdFilter.Execute(label)
+
+		ccFilter = sitk.ConnectedComponentImageFilter()
+		label_ = ccFilter.Execute(label_)
+
+		labelShapeFilter = sitk.LabelShapeStatisticsImageFilter()
+		labelShapeFilter.Execute(label_)
+
+		for cc_region in labelShapeFilter.GetLabels():
+			(x, y, z, w, h, d) = labelShapeFilter.GetBoundingBox(cc_region)
+			bboxes.append((x,y,z,w,h,d,label_num))
+
+	return bboxes
+
 def generate_txt_label_2d(label_path, image,label):
 	bbox_labels = []
 
@@ -113,20 +142,37 @@ def generate_txt_label_2d(label_path, image,label):
 		statFilter = sitk.StatisticsImageFilter()
 		statFilter.Execute(label_slice_)
 
+		bbox_txt = os.path.abspath(label_path) + " " + str(i)
 		if statFilter.GetSum() > 1:
 			bboxes = bboxes_from_slice(image_slice,label_slice,plot=PLOT)
 				
-			bbox_txt = os.path.abspath(label_path) + " " + str(i)
 			for (x, y, w, h, class_num) in bboxes:
 				bbox_txt = "{} {},{},{},{},{}".format(bbox_txt,x,y,w,h,class_num)
-			bbox_labels.append(bbox_txt)
-		else:
-			continue
+		
+		bbox_labels.append(bbox_txt)
 
 	return bbox_labels
 
 def generate_txt_label_3d(label_path, image, label):
-	return
+	# check if label contain things 
+	binaryThresholdFilter = sitk.BinaryThresholdImageFilter()
+	binaryThresholdFilter.SetLowerThreshold(1)
+	binaryThresholdFilter.SetUpperThreshold(255)
+	binaryThresholdFilter.SetInsideValue(1)
+	binaryThresholdFilter.SetOutsideValue(0)
+	label_ = binaryThresholdFilter.Execute(label)
+
+	statFilter = sitk.StatisticsImageFilter()
+	statFilter.Execute(label_)
+
+	bbox_txt = os.path.abspath(label_path) + " "
+	if statFilter.GetSum() > 1:
+		bboxes = bbox_from_volume(image,label)
+			
+		for (x, y, z, w, h, d, class_num) in bboxes:
+			bbox_txt = "{} {},{},{},{},{},{},{}".format(bbox_txt,x,y,z,w,h,d,class_num)
+
+	return [bbox_txt]
 
 def append_to_txt_label(image_path, label_path):
 	# check existence of required files
@@ -150,12 +196,14 @@ def append_to_txt_label(image_path, label_path):
 	if DIRECTION == "AXIAL" or DIRECTION == "CORONAL" or DIRECTION == "SAGITTAL":
 		# 2D model
 		label_txt = generate_txt_label_2d(label_path, image, label)
-		output_file.write("\n".join(label_txt)+"\n")
 	elif DIRECTION == "3D":
 		# 3D model
-		pass
+		label_txt = generate_txt_label_3d(label_path, image, label)
 	else:
 		print("DIRECTION should be AXIAL, CORONAL, SAGITTAL or 3D")
+
+	output_file.write("\n".join(label_txt)+"\n")
+	output_file.close()
 
 
 def main():
