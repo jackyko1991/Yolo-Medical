@@ -84,6 +84,8 @@ Execute the file from repository root with
 python ./data/label_from_nii.py
 ```
 
+**Note: The bounding box is in pixel coordinate, spacial resolution is not taken into consideration for this model**
+
 ### Create your own dataset from scratch
 **To be developed**
 
