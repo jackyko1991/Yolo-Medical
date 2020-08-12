@@ -12,7 +12,7 @@ def str2bool(v):
 
 def get_parser():
 	# create parser object
-	parser = argparse.ArgumentParser(description='Tensorflow implementation for Yolo dection, specialized for medical image purpose.',
+	parser = argparse.ArgumentParser(description='Tensorflow implementation for Yolo detection, specialized for medical image purpose.',
 		epilog='For questions and bug reports, contact Jacky Ko <jkmailbox1991@gmail.com>')
 
 	# register type keyword to registries
@@ -36,7 +36,7 @@ def get_parser():
 		dest='config_json',
 		help='JSON file for model configuration',
 		type=str,
-		default='./config/config.json', 
+		default='./configs/config.json', 
 		metavar='FILENAME'
 		)
 	parser.add_argument(

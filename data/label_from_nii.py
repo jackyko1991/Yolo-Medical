@@ -10,10 +10,10 @@ import numpy as np
 # TXT_LABEL_FILENAME = "./data/nii/label_training.txt"
 
 DATA_DIR = "./nii/training"
-TXT_LABEL_FILENAME = "./nii/label_training.txt"
-DIRECTION = "3D" # AXIAL, CORONAL, SAGITTAL, 3D
-IMAGE_FILENAME = "image.nii"
-LABEL_FILENAME = "label.nii"
+TXT_LABEL_FILENAME = "./nii/label_axial_training.txt"
+DIRECTION = "AXIAL" # AXIAL, CORONAL, SAGITTAL, 3D
+IMAGE_FILENAME = "image.nii.gz"
+LABEL_FILENAME = "label.nii.gz"
 
 # for plotting only
 CLASS_NAMES = ["background", "liver", "lesion"]
@@ -44,7 +44,7 @@ def bboxes_from_slice(image_slice, label_slice,plot=False):
 
 		for cc_region in labelShapeFilter.GetLabels():
 			(x, y, w, h) = labelShapeFilter.GetBoundingBox(cc_region)
-			bboxes.append((x,y,w,h,label))
+			bboxes.append((x,y,w,h,label-1))
 
 	# plot to debug
 	if plot:
@@ -99,7 +99,7 @@ def bbox_from_volume(image, label):
 
 		for cc_region in labelShapeFilter.GetLabels():
 			(x, y, z, w, h, d) = labelShapeFilter.GetBoundingBox(cc_region)
-			bboxes.append((x,y,z,w,h,d,label_num))
+			bboxes.append((x,y,z,w,h,d,label_num-1))
 
 	return bboxes
 

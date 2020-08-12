@@ -4,25 +4,30 @@
         "BodyPart": "Liver",
         "Diseases": "Lesion"
     },    
+    "Networks": {
+        "PatchShape": [256,256],
+        "Name": "VNet",
+        "GridSize": 7,
+        "BoundingBoxesPerCell": 2,
+        "Dropout": 0.01
+    },
     "TrainingSetting": {
         "Data": {
             "TrainingLabelFilename": "./data/nii/label_training.txt",
-            "TestingLabelFilename": "./data/nii/label_testing.txt"
+            "TestingLabelFilename": "./data/nii/label_testing.txt",
+            "ClassNamesFilename": "./data/classnames.txt",
+            "Type": "NIFTI"
         },
         "Restore": true,
-        "SegmentationClasses": [0,1,2],
         "LogDir": "./tmp/log",
         "CheckpointDir": "./tmp/ckpt",
         "BatchSize": 32,
-        "PatchShape": [256,256,32],
         "ImageLog": true,
         "Testing": true,
-        "Epoches": 99999,
+        "TestStep": 100,
+        "Epochs": 99999,
+        "MaxIterations": 100000,
         "LogInterval": 25,
-        "Networks": {
-            "Name":"VNet",
-            "Dropout": 0.01
-        },
         "Loss": "weighted_sorensen",
         "Optimizer":{
             "Name": "Adam",
@@ -45,7 +50,6 @@
             "ProbabilityFilename": "probability_tf.nii.gz"
         },
         "CheckpointPath": "./tmp/ckpt/checkpoint-23125",
-        "Stride": [256,256,32],
         "BatchSize": 10,
         "ProbabilityOutput":true
     }
